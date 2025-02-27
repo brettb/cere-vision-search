@@ -17,7 +17,17 @@ This project will be an introduction to creating a full featured image search an
     cd 
     ```
 
-2. **Install Python dependencies:** (Be sure to comment out Ollama if you dont want to use it locally installed via Python)
+2. Create and activate a virtual environment (recommended):
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3.   **Install Python dependencies:** (Be sure to comment out Ollama if you dont want to use it locally installed via Python)
+     Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+   
 
     ```bash
     pip install -r requirements.txt

@@ -85,20 +85,12 @@ class VectorStore:
             raise
 
     def sync_with_metadata(self, folder_path: Path, metadata: Dict[str, Dict]) -> None:
-        """Synchronize vector store with metadata JSON."""
+        """Synchronize vector store with metadata JSON.
+        
+        This method only adds or updates entries from the provided metadata,
+        but does not delete any existing entries to preserve data from multiple folders.
+        """
         try:
-            # Get all existing documents in vector store
-            existing_docs = self.collection.get()
-            existing_ids = set(existing_docs['ids']) if existing_docs else set()
-            
-            # Get all ids from metadata
-            metadata_ids = set(metadata.keys())
-            
-            # Delete documents that are in vector store but not in metadata
-            ids_to_delete = existing_ids - metadata_ids
-            if ids_to_delete:
-                self.collection.delete(ids=list(ids_to_delete))
-            
             # Add or update documents from metadata
             for image_path, meta in metadata.items():
                 self.add_or_update_image(image_path, meta)

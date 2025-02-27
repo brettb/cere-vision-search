@@ -18,8 +18,7 @@ class ImageText(BaseModel):
     text_content: str
 
 class ImageProcessor:
-    def __init__(self, model_name: str = 'llava-llama3:latest'):
-        # CONFIGURABLE: You can change the Ollama model name here
+    def __init__(self, model_name: str = 'minicpm-v'):
         self.model_name = model_name
 
     async def process_image(self, image_path: Path) -> Dict:
@@ -113,8 +112,7 @@ class ImageProcessor:
                     'content': prompt,
                     'images': [image_path],
                     'options': {
-                        # CONFIGURABLE: You can change the number of GPUs used here
-                        'num_gpu': 1
+                        'num_gpu': 41
                     }
                 }],
                 format=format_schema

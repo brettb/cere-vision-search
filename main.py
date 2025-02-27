@@ -16,12 +16,13 @@ app = FastAPI()
 # Mount static files (your frontend)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Initialize a list to track all folders that have been loaded
+app.loaded_folders = []
+
 # We don't need CORS middleware anymore since frontend and backend are served from same origin
 # app.add_middleware(CORSMiddleware, ...)
 
 # Set up basic logging configuration
-# CONFIGURABLE: You can adjust the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) 
-# to control the verbosity of the application logs
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -53,8 +54,7 @@ class UpdateImageMetadata(BaseModel):
 
 def get_supported_extensions() -> Set[str]:
     """Return a set of supported image file extensions."""
-    # CONFIGURABLE: You can add or remove image file extensions here to support different image formats
-    return {'.jpg', '.jpeg', '.png'}
+    return {'.jpg', '.jpeg', '.png', '.webp'}
 
 def initialize_image_metadata(image_path: str) -> Dict:
     """Create initial metadata structure for a single image."""
@@ -119,9 +119,6 @@ def load_or_create_metadata(folder_path: Path) -> Dict[str, Dict]:
     with open(metadata_file, 'w') as f:
         json.dump(metadata, f, indent=4)
 
-    # Sync with vector store using the instance-specific vector store
-    app.vector_store.sync_with_metadata(folder_path, metadata)
-
     return metadata
 
 def create_image_info(rel_path: str, metadata: Dict) -> ImageInfo:
@@ -140,10 +137,13 @@ def search_images(query: str, metadata: Dict[str, Dict]) -> List[Dict]:
     """
     Hybrid search combining full-text and vector search.
     Returns list of matching images with their metadata.
+    
+    This function searches both the current folder's metadata (full-text search)
+    and the vector store (which contains data from all previously loaded folders).
     """
     results = set()
     
-    # Full-text search
+    # Full-text search on current folder's metadata
     if query:
         query = query.lower()
         for path, meta in metadata.items():
@@ -154,22 +154,32 @@ def search_images(query: str, metadata: Dict[str, Dict]) -> List[Dict]:
                 
                 results.add(path)
     else:
-        # If no query, return all images
+        # If no query, return all images from current folder
         results.update(metadata.keys())
     
-    # Vector search
+    # Vector search across all folders ever loaded
     vector_results = app.vector_store.search_images(query)
     results.update(vector_results)
     
     # Convert results to list of dicts with metadata
     search_results = []
     for path in results:
-        if path in metadata:  # Ensure the path exists in metadata
+        # For images in the current folder, use the local metadata
+        if path in metadata:
             search_results.append({
                 "name": Path(path).name,
                 "path": path,
                 **metadata[path]
             })
+        # For images from other folders, get metadata from vector store
+        else:
+            vector_metadata = app.vector_store.get_metadata(path)
+            if vector_metadata:
+                search_results.append({
+                    "name": Path(path).name,
+                    "path": path,
+                    **vector_metadata
+                })
     
     return search_results
 
@@ -189,13 +199,22 @@ async def get_images(request: FolderRequest):
     
     app.current_folder = str(folder_path)
     
+    # Add to loaded folders list if not already there
+    if str(folder_path) not in app.loaded_folders:
+        app.loaded_folders.append(str(folder_path))
+    
     try:
         # Initialize vector store in a fixed location
-        # CONFIGURABLE: You can change the vector store location by modifying this path
         vector_store_path = Path(".vectordb")
         app.vector_store = VectorStore(persist_directory=str(vector_store_path))
         
         metadata = load_or_create_metadata(folder_path)
+        
+        # Store the current folder's metadata separately without full synchronization
+        # This prevents removing entries from previously loaded folders
+        for rel_path, meta in metadata.items():
+            app.vector_store.add_or_update_image(rel_path, meta)
+        
         images = [create_image_info(rel_path, metadata) 
                   for rel_path in metadata.keys()]
         logger.info(f"Successfully processed folder: {folder_path}")
@@ -206,19 +225,22 @@ async def get_images(request: FolderRequest):
                             detail=f"Error processing folder: {str(e)}")
 
 @app.get("/image/{path:path}")
-async def get_image(path: str, request: FolderRequest = None):
+async def get_image(path: str):
     try:
         # Get the folder path from the most recent request
-        # Note: This is a simplified solution. In a production environment,
-        # you might want to store this in a session or database
         if not hasattr(app, 'current_folder'):
             raise HTTPException(status_code=400, detail="No folder selected")
         
-        # Combine the base folder path with the relative image path
+        # First try to find the image in the current folder
         full_path = os.path.join(app.current_folder, path)
         
         if not os.path.exists(full_path):
-            raise HTTPException(status_code=404, detail="Image not found")
+            # If not found in current folder, check if it's a path from a previously loaded folder
+            # This assumes path could be an absolute path from another folder
+            if os.path.exists(path):
+                full_path = path
+            else:
+                raise HTTPException(status_code=404, detail="Image not found")
         
         return FileResponse(full_path)
     except Exception as e:
@@ -328,6 +350,14 @@ async def update_metadata(request: UpdateImageMetadata):
         logger.error(f"Error updating metadata: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error updating metadata: {str(e)}")
 
+@app.get("/loaded-folders")
+async def get_loaded_folders():
+    """Return a list of all folders that have been loaded."""
+    if not hasattr(app, 'loaded_folders'):
+        return {"folders": []}
+    
+    return {"folders": app.loaded_folders}
+
 @app.get("/check-init-status")
 async def check_init_status():
     """Check if this is the first time initialization."""
@@ -345,6 +375,5 @@ async def check_init_status():
 
 if __name__ == "__main__":
     import uvicorn
-    # CONFIGURABLE: You can change the host and port for the application server here
     uvicorn.run(app, host="127.0.0.1", port=8801) 
     # or in command line: uvicorn main:app --host 127.0.0.1 --port 8801 --reload

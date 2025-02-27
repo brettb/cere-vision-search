@@ -13,7 +13,7 @@ This project will be an introduction to creating a full featured image search an
 1. **Clone the repository:**
     ```bash
     https://github.com/brettb/cere-vision-search.git
-    cd 
+    cd cere-vision-search
     ```
 
 2. Create and activate a virtual environment (recommended):

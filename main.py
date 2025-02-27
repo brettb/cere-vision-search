@@ -20,6 +20,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # app.add_middleware(CORSMiddleware, ...)
 
 # Set up basic logging configuration
+# CONFIGURABLE: You can adjust the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL) 
+# to control the verbosity of the application logs
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -51,7 +53,8 @@ class UpdateImageMetadata(BaseModel):
 
 def get_supported_extensions() -> Set[str]:
     """Return a set of supported image file extensions."""
-    return {'.jpg', '.jpeg', '.png', '.webp'}
+    # CONFIGURABLE: You can add or remove image file extensions here to support different image formats
+    return {'.jpg', '.jpeg', '.png'}
 
 def initialize_image_metadata(image_path: str) -> Dict:
     """Create initial metadata structure for a single image."""
@@ -188,6 +191,7 @@ async def get_images(request: FolderRequest):
     
     try:
         # Initialize vector store in a fixed location
+        # CONFIGURABLE: You can change the vector store location by modifying this path
         vector_store_path = Path(".vectordb")
         app.vector_store = VectorStore(persist_directory=str(vector_store_path))
         
@@ -341,5 +345,6 @@ async def check_init_status():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8800) 
-    # or in command line: uvicorn main:app --host 127.0.0.1 --port 8800 --reload
+    # CONFIGURABLE: You can change the host and port for the application server here
+    uvicorn.run(app, host="127.0.0.1", port=8801) 
+    # or in command line: uvicorn main:app --host 127.0.0.1 --port 8801 --reload

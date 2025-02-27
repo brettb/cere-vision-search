@@ -4,14 +4,13 @@ This project will be an introduction to creating a full featured image search an
 ## Prerequisites
 
 -   **Python 3.10+**: Ensure Python is installed on your system.
--   **Ollama**: You have a choice to install with pip via the requirements.txt, install locally with a binary downloaded from the [Ollama website](https://ollama.com/download) or as a Docker container. I will also host a copy on my laptop that will be available when I am.
+-   **Ollama**: You have a choice to install with pip via the requirements.txt, install locally with a binary downloaded from the [Ollama website](https://ollama.com/download) or as a Docker container. 
 
 -   **ChromaDB**: ChromaDB will be installed as a Python package via pip or you can install with Docker.
 
 ## Installation
 
 1. **Clone the repository:**
-
     ```bash
     https://github.com/brettb/cere-vision-search.git
     cd 
@@ -23,7 +22,7 @@ This project will be an introduction to creating a full featured image search an
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    
    ```
-3.   **Install Python dependencies:** (Be sure to comment out Ollama if you dont want to use it locally installed via Python)
+3.   **Install Python dependencies:** 
      Install dependencies:
    ```bash
    pip install -r requirements.txt
@@ -34,9 +33,9 @@ This project will be an introduction to creating a full featured image search an
   
   . **Pull and Start the Ollama model:**
 
-    Ensure the Llama 3.2 Vision model is running in Ollama. You may need to pull and start the model using Ollama's command-line interface. 
+    Ensure the llava-llama3 Vision model is running in Ollama. You may need to pull and start the model using Ollama's command-line interface. 
 
-    Download the installer from [here](https://github.com/ollama/ollama) and install Ollama.
+    Download the installer from [here](https://github.com/ollama/ollama) to install Ollama for your platform.
 
     Pull the llava-llama3:latest Vision model:
 

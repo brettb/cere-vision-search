@@ -1,4 +1,4 @@
-This project will be an introduction to creating a full featured image search and tagging application. To keep things simple, we will start with a Computer Vision model served by a locally hosted or remote Ollama or an OpenAi compatible server and a Chroma Vector Store.
+This project will be an introduction to creating a full featured image search and tagging application. To keep things simple, we will start with a Computer Vision model served by a locally hosted Ollama or an OpenAi compatible server and a Chroma Vector Store.
 
 
 ## Prerequisites

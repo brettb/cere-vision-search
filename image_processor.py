@@ -68,7 +68,7 @@ class ImageProcessor:
     async def _get_description(self, image_path: str) -> ImageDescription:
         """Get a structured description of the image."""
         response = await self._query_ollama(
-            "Describe this image in one or two sentences.",
+            f"Describe this image in one or two sentences. Respond in JSON format: {json.dumps(ImageDescription.model_json_schema())}",
             image_path,
             ImageDescription.model_json_schema()
         )
@@ -77,7 +77,7 @@ class ImageProcessor:
     async def _get_tags(self, image_path: str) -> ImageTags:
         """Get structured tags for the image."""
         response = await self._query_ollama(
-            "List 5-10 relevant tags for this image. Include both objects, artistic style, type of image, color, etc.",
+            f"List 5-10 relevant tags for this image. Include both objects, artistic style, type of image, color, etc. Respond in JSON format: {json.dumps(ImageTags.model_json_schema())}",
             image_path,
             ImageTags.model_json_schema()
         )
@@ -90,7 +90,7 @@ class ImageProcessor:
         If has_text is False, text_content will be ignored.
         """
         response = await self._query_ollama(
-            "Identify if there is visible text in the image. Respond with JSON where 'has_text' is true only if there is actual text visible in the image, and 'text_content' contains the extracted text. If no text is visible, set 'has_text' to false and 'text_content' to empty string.",
+            f"Identify if there is visible text in the image. Respond with JSON where 'has_text' is true only if there is actual text visible in the image, and 'text_content' contains the extracted text. If no text is visible, set 'has_text' to false and 'text_content' to empty string. Respond in JSON format: {json.dumps(ImageText.model_json_schema())}",
             image_path,
             ImageText.model_json_schema()
         )
@@ -117,7 +117,7 @@ class ImageProcessor:
 
                 # Set the number of GPUs to match your system
                 }],
-                format=json.dumps(format_schema)
+                format='json'
             )
             return response['message']['content']
         except Exception as e:

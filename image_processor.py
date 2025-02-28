@@ -112,10 +112,12 @@ class ImageProcessor:
                     'content': prompt,
                     'images': [image_path],
                     'options': {
-                        'num_gpu': 41
+                        'num_gpu': 1
                     }
+
+                # Set the number of GPUs to match your system
                 }],
-                format=format_schema
+                format=json.dumps(format_schema)
             )
             return response['message']['content']
         except Exception as e:

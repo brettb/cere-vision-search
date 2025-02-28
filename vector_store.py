@@ -19,7 +19,7 @@ class VectorStore:
             response = requests.get(f"{server_url}/api/v1", timeout=2)
             if response.status_code == 200:
                 logger.info(f"Connected to remote ChromaDB server at {server_url}")
-                self.client = chromadb.HttpClient(host="127.0.0.1", port=8800)
+                self.client = chromadb.HttpClient(host="127.0.0.1", port=8800, embedding_function=embedding_functions.DefaultEmbeddingFunction())
             else:
                 raise Exception(f"Server responded with status code: {response.status_code}")
         except Exception as e:
